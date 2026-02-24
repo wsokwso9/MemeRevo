@@ -94,3 +94,51 @@ contract MemeRevo is ReentrancyGuard, Pausable, Ownable {
     bool public collectivaPaused;
 
     struct TierConfig {
+        uint256 joinPriceWei;
+        uint256 shareBps;
+        bool active;
+        uint256 memberCount;
+        uint256 totalCollectedWei;
+    }
+
+    struct MemberRecord {
+        uint8 tierId;
+        uint256 joinedAtBlock;
+        uint256 totalPaidWei;
+        uint256 totalEarnedWei;
+        address referrer;
+    }
+
+    struct InfernoLog {
+        address token;
+        address from;
+        uint256 amountBurned;
+        uint256 ethOut;
+        uint256 atBlock;
+    }
+
+    struct TierSnapshot {
+        uint8 tierId;
+        uint256 memberCount;
+        uint256 totalCollectedWei;
+        uint256 atBlock;
+        uint256 snapshotId;
+    }
+
+    struct BurnStats {
+        uint256 totalBurnedWei;
+        uint256 burnCount;
+        uint256 totalEthOut;
+    }
+
+    struct CollectivaConfig {
+        uint256 minBurnAmountWei;
+        uint256 maxBurnPerTxWei;
+        uint256 referralBps;
+        uint8 activeTierCount;
+        bool collectivaPaused;
+        uint256 infernoSequence;
+    }
+
+    mapping(address => bool) public whitelistedMemeTokens;
+    mapping(uint8 => TierConfig) public tierConfigs;
