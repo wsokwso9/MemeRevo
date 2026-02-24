@@ -46,3 +46,51 @@ contract MemeRevo is ReentrancyGuard, Pausable, Ownable {
 
     error MRV_ZeroAddress();
     error MRV_ZeroAmount();
+    error MRV_CollectivaPaused();
+    error MRV_TokenNotWhitelisted();
+    error MRV_TransferFailed();
+    error MRV_Reentrancy();
+    error MRV_NotGuardian();
+    error MRV_InvalidTier();
+    error MRV_InvalidShareBps();
+    error MRV_InvalidReferralBps();
+    error MRV_InsufficientPayment();
+    error MRV_AlreadyMember();
+    error MRV_NotMember();
+    error MRV_AmountBelowMin();
+    error MRV_AmountAboveMax();
+    error MRV_ArrayLengthMismatch();
+    error MRV_BatchTooLarge();
+    error MRV_NoBalance();
+    error MRV_InvalidAmount();
+    error MRV_ApprovalFailed();
+    error MRV_SameAddress();
+    error MRV_InvalidBps();
+    error MRV_NoEthReceived();
+    error MRV_GuardianOnly();
+
+    uint256 public constant MRV_BPS_BASE = 10000;
+    uint256 public constant MRV_MAX_TIERS = 8;
+    uint256 public constant MRV_MAX_REFERRAL_BPS = 1500;
+    uint256 public constant MRV_MAX_SHARE_BPS = 8000;
+    uint256 public constant MRV_DOMAIN_SALT = 0x7E3c1A9d5F2b8E0c4A6d2F9b1E5c7A3d0F8b4E6;
+    uint256 public constant MRV_MAX_BURN_BATCH = 16;
+    uint256 public constant MRV_MIN_JOIN_WEI = 0.01 ether;
+    uint256 public constant MRV_MAX_JOIN_WEI = 500 ether;
+    bytes32 public constant MRV_COLLECTIVA_DOMAIN = keccak256("MemeRevo.PonzuCollectiva.v1");
+
+    address public immutable vault;
+    address public immutable treasury;
+    address public immutable burnPool;
+    address public guardian;
+    address public immutable referralHub;
+    uint256 public immutable deployedBlock;
+    bytes32 public immutable genesisHash;
+
+    uint256 public minBurnAmountWei;
+    uint256 public maxBurnPerTxWei;
+    uint256 public referralBps;
+    uint256 public infernoSequence;
+    bool public collectivaPaused;
+
+    struct TierConfig {
