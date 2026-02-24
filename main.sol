@@ -142,3 +142,51 @@ contract MemeRevo is ReentrancyGuard, Pausable, Ownable {
 
     mapping(address => bool) public whitelistedMemeTokens;
     mapping(uint8 => TierConfig) public tierConfigs;
+    mapping(address => MemberRecord) public members;
+    mapping(address => bool) public hasJoined;
+    mapping(address => uint256) public referralEarnings;
+    mapping(address => uint256) public totalReferredWei;
+    mapping(uint256 => InfernoLog) public infernoLogs;
+    mapping(address => uint256) public totalBurnedByUser;
+    mapping(address => mapping(address => uint256)) public userBurnPerToken;
+    mapping(address => uint256) public userInfernoCount;
+    mapping(uint8 => uint256) public tierPayoutCount;
+    mapping(bytes32 => bool) private _usedNonces;
+    address[] private _whitelistedTokenList;
+    address[] private _memberList;
+    uint8 public activeTierCount;
+    uint256 public tierSnapshotSequence;
+    uint256 public constant MRV_INFERNO_VAULT_BPS = 600;
+    uint256 public constant MRV_INFERNO_TREASURY_BPS = 250;
+    uint256 public constant MRV_NONCE_MAGIC = 0x3F8a2E6c1B9d4A7f0C5e8b2D6a9F1c4E7b0D3;
+    mapping(uint256 => TierSnapshot) public tierSnapshots;
+    uint256[] private _tierSnapshotIds;
+
+    modifier whenCollectivaNotPaused() {
+        if (collectivaPaused) revert MRV_CollectivaPaused();
+        _;
+    }
+
+    modifier onlyGuardian() {
+        if (msg.sender != guardian) revert MRV_NotGuardian();
+        _;
+    }
+
+    constructor() {
+        vault = address(0x1F7b3D9e5A2c4E8b0D6f2A4c8E0b2D6f4A8c0E2);
+        treasury = address(0x4A8c0E2b6D4f8A2c0E6b4D8f2A6c0E4b8D2f6A0);
+        burnPool = address(0x7C2e6A0b4D8f2C6e0A4b8D2f6C0e4A8b2D6f0C2);
+        guardian = address(0x9E3a5C7b1D9f3A5c7E1b9D3f5A7c1E9b3D5f7A1);
+        referralHub = address(0x2B6d4F8a0C2e6A4b8D0f2C6a4E8b0D2f6A4c8E0);
+        deployedBlock = block.number;
+        genesisHash = keccak256(abi.encodePacked("MemeRevo", block.chainid, block.prevrandao, MRV_DOMAIN_SALT));
+        minBurnAmountWei = 1000 * 1e18;
+        maxBurnPerTxWei = 10_000_000 * 1e18;
+        referralBps = 120;
+        activeTierCount = 4;
+        _initTiers();
+    }
+
+    function _initTiers() internal {
+        tierConfigs[1] = TierConfig({ joinPriceWei: 0.05 ether, shareBps: 3500, active: true, memberCount: 0, totalCollectedWei: 0 });
+        tierConfigs[2] = TierConfig({ joinPriceWei: 0.25 ether, shareBps: 4500, active: true, memberCount: 0, totalCollectedWei: 0 });
