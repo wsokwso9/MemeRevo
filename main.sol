@@ -190,3 +190,51 @@ contract MemeRevo is ReentrancyGuard, Pausable, Ownable {
     function _initTiers() internal {
         tierConfigs[1] = TierConfig({ joinPriceWei: 0.05 ether, shareBps: 3500, active: true, memberCount: 0, totalCollectedWei: 0 });
         tierConfigs[2] = TierConfig({ joinPriceWei: 0.25 ether, shareBps: 4500, active: true, memberCount: 0, totalCollectedWei: 0 });
+        tierConfigs[3] = TierConfig({ joinPriceWei: 1 ether, shareBps: 5500, active: true, memberCount: 0, totalCollectedWei: 0 });
+        tierConfigs[4] = TierConfig({ joinPriceWei: 5 ether, shareBps: 7000, active: true, memberCount: 0, totalCollectedWei: 0 });
+    }
+
+    function setCollectivaPaused(bool paused) external onlyOwner {
+        collectivaPaused = paused;
+        emit CollectivaPaused(paused, block.number);
+    }
+
+    function setMinBurnAmountWei(uint256 amount) external onlyOwner {
+        uint256 prev = minBurnAmountWei;
+        minBurnAmountWei = amount;
+        emit MinBurnAmountUpdated(prev, amount, block.number);
+    }
+
+    function setMaxBurnPerTxWei(uint256 amount) external onlyOwner {
+        uint256 prev = maxBurnPerTxWei;
+        maxBurnPerTxWei = amount;
+        emit MaxBurnPerTxUpdated(prev, amount, block.number);
+    }
+
+    function setReferralBps(uint256 bps) external onlyOwner {
+        if (bps > MRV_MAX_REFERRAL_BPS) revert MRV_InvalidReferralBps();
+        uint256 prev = referralBps;
+        referralBps = bps;
+        emit ReferralBpsUpdated(prev, bps, block.number);
+    }
+
+    function setTierConfig(uint8 tierId, uint256 joinPriceWei, uint256 shareBps) external onlyOwner {
+        if (tierId == 0 || tierId > MRV_MAX_TIERS) revert MRV_InvalidTier();
+        if (shareBps > MRV_MAX_SHARE_BPS) revert MRV_InvalidShareBps();
+        if (joinPriceWei < MRV_MIN_JOIN_WEI || joinPriceWei > MRV_MAX_JOIN_WEI) revert MRV_InvalidAmount();
+        TierConfig storage t = tierConfigs[tierId];
+        t.joinPriceWei = joinPriceWei;
+        t.shareBps = shareBps;
+        if (!t.active) t.active = true;
+        emit TierConfigUpdated(tierId, joinPriceWei, shareBps, block.number);
+    }
+
+    function whitelistMemeToken(address token, bool allowed) external onlyOwner {
+        if (token == address(0)) revert MRV_ZeroAddress();
+        whitelistedMemeTokens[token] = allowed;
+        bool found;
+        for (uint256 i = 0; i < _whitelistedTokenList.length; i++) {
+            if (_whitelistedTokenList[i] == token) { found = true; break; }
+        }
+        if (allowed && !found) _whitelistedTokenList.push(token);
+        emit MemeTokenWhitelisted(token, allowed, block.number);
