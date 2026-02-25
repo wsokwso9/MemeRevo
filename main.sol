@@ -286,3 +286,51 @@ contract MemeRevo is ReentrancyGuard, Pausable, Ownable {
         for (uint256 i = 0; i < tokens.length; i++) {
             address token = tokens[i];
             uint256 amount = amounts[i];
+            if (!whitelistedMemeTokens[token]) continue;
+            if (amount < minBurnAmountWei) continue;
+            if (amount > maxBurnPerTxWei) continue;
+            IERC20Meme t = IERC20Meme(token);
+            if (t.balanceOf(msg.sender) < amount) continue;
+            if (!t.transferFrom(msg.sender, address(this), amount)) continue;
+            (bool burnOk,) = token.call(abi.encodeWithSelector(0x42966c68, amount));
+            if (!burnOk) {
+                (bool sendOk,) = token.call(abi.encodeWithSelector(0xa9059cbb, burnPool, amount));
+                if (!sendOk) continue;
+            }
+            totalBurned += amount;
+        }
+        totalEthOut = address(this).balance - ethBefore;
+        infernoSequence++;
+        if (totalBurned > 0) {
+            totalBurnedByUser[msg.sender] += totalBurned;
+            userInfernoCount[msg.sender]++;
+        }
+        emit InfernoBatch(msg.sender, tokens.length, totalBurned, block.number);
+        if (totalEthOut > 0) {
+            uint256 toVault = (totalEthOut * MRV_INFERNO_VAULT_BPS) / MRV_BPS_BASE;
+            uint256 toTreasury = (totalEthOut * MRV_INFERNO_TREASURY_BPS) / MRV_BPS_BASE;
+            if (toVault > 0) _safeSend(vault, toVault);
+            if (toTreasury > 0) _safeSend(treasury, toTreasury);
+        }
+        return totalEthOut;
+    }
+
+    function joinCollectiva(uint8 tierId, address referrer) external payable nonReentrant whenCollectivaNotPaused {
+        if (tierId == 0 || tierId > activeTierCount) revert MRV_InvalidTier();
+        TierConfig storage t = tierConfigs[tierId];
+        if (!t.active) revert MRV_InvalidTier();
+        if (msg.value < t.joinPriceWei) revert MRV_InsufficientPayment();
+        if (hasJoined[msg.sender]) revert MRV_AlreadyMember();
+        hasJoined[msg.sender] = true;
+        members[msg.sender] = MemberRecord({
+            tierId: tierId,
+            joinedAtBlock: block.number,
+            totalPaidWei: msg.value,
+            totalEarnedWei: 0,
+            referrer: referrer != address(0) ? referrer : referralHub
+        });
+        t.memberCount++;
+        t.totalCollectedWei += msg.value;
+        _memberList.push(msg.sender);
+        uint256 refBps = (referrer != address(0) && referrer != msg.sender) ? referralBps : 0;
+        uint256 refAmount = (msg.value * refBps) / MRV_BPS_BASE;
