@@ -670,3 +670,51 @@ contract MemeRevo is ReentrancyGuard, Pausable, Ownable {
         tierSnapshots[tierSnapshotSequence] = TierSnapshot({
             tierId: tierId,
             memberCount: tierConfigs[tierId].memberCount,
+            totalCollectedWei: tierConfigs[tierId].totalCollectedWei,
+            atBlock: block.number,
+            snapshotId: tierSnapshotSequence
+        });
+        _tierSnapshotIds.push(tierSnapshotSequence);
+        emit SnapshotRecorded(tierSnapshotSequence, tierId, tierConfigs[tierId].memberCount, block.number);
+    }
+
+    function getInfernoVaultShare(uint256 ethAmount) external pure returns (uint256) {
+        return _computeVaultShare(ethAmount);
+    }
+
+    function getInfernoTreasuryShare(uint256 ethAmount) external pure returns (uint256) {
+        return _computeTreasuryShare(ethAmount);
+    }
+
+    function validateTierForJoin(uint8 tierId) external view returns (bool) {
+        return _validateTierId(tierId);
+    }
+
+    function validateBurnAmount(uint256 amount) external view returns (bool) {
+        return _validateBurnAmount(amount);
+    }
+
+    function getTotalBurnedByUser(address account) external view returns (uint256) {
+        return totalBurnedByUser[account];
+    }
+
+    function getUserInfernoCount(address account) external view returns (uint256) {
+        return userInfernoCount[account];
+    }
+
+    function getReferrerEarnings(address account) external view returns (uint256) {
+        return referralEarnings[account];
+    }
+
+    function getTotalReferredWei(address account) external view returns (uint256) {
+        return totalReferredWei[account];
+    }
+
+    function getAllTierIds() external view returns (uint8[] memory ids) {
+        ids = new uint8[](activeTierCount);
+        for (uint8 i = 1; i <= activeTierCount; i++) ids[i - 1] = i;
+        return ids;
+    }
+
+    function getTierIdsActive() external view returns (uint8[] memory ids) {
+        uint256 n;
