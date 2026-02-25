@@ -718,3 +718,51 @@ contract MemeRevo is ReentrancyGuard, Pausable, Ownable {
 
     function getTierIdsActive() external view returns (uint8[] memory ids) {
         uint256 n;
+        for (uint8 i = 1; i <= MRV_MAX_TIERS; i++) if (tierConfigs[i].active) n++;
+        ids = new uint8[](n);
+        uint256 j;
+        for (uint8 i = 1; i <= MRV_MAX_TIERS; i++) {
+            if (tierConfigs[i].active) { ids[j] = i; j++; }
+        }
+        return ids;
+    }
+
+    function getJoinPriceForTier(uint8 tierId) external view returns (uint256) {
+        return tierConfigs[tierId].joinPriceWei;
+    }
+
+    function getShareBpsForTier(uint8 tierId) external view returns (uint256) {
+        return tierConfigs[tierId].shareBps;
+    }
+
+    function getMemberCountForTier(uint8 tierId) external view returns (uint256) {
+        return tierConfigs[tierId].memberCount;
+    }
+
+    function getTotalCollectedForTier(uint8 tierId) external view returns (uint256) {
+        return tierConfigs[tierId].totalCollectedWei;
+    }
+
+    function isTierActive(uint8 tierId) external view returns (bool) {
+        return tierId <= MRV_MAX_TIERS && tierConfigs[tierId].active;
+    }
+
+    function getGenesisBlock() external view returns (uint256) {
+        return deployedBlock;
+    }
+
+    function getDomainSalt() external pure returns (uint256) {
+        return MRV_DOMAIN_SALT;
+    }
+
+    function getCollectivaDomainHash() external pure returns (bytes32) {
+        return MRV_COLLECTIVA_DOMAIN;
+    }
+
+    function getBpsBase() external pure returns (uint256) {
+        return MRV_BPS_BASE;
+    }
+
+    function getMaxTiers() external pure returns (uint256) {
+        return MRV_MAX_TIERS;
+    }
