@@ -574,3 +574,51 @@ contract MemeRevo is ReentrancyGuard, Pausable, Ownable {
         c.referralBps = referralBps;
         c.activeTierCount = activeTierCount;
         c.collectivaPaused = collectivaPaused;
+        c.infernoSequence = infernoSequence;
+        return c;
+    }
+
+    function getTierSnapshotById(uint256 snapshotId) external view returns (TierSnapshot memory) {
+        return tierSnapshots[snapshotId];
+    }
+
+    function getTierSnapshotCount() external view returns (uint256) {
+        return _tierSnapshotIds.length;
+    }
+
+    function getTierSnapshotIdAt(uint256 index) external view returns (uint256) {
+        if (index >= _tierSnapshotIds.length) revert MRV_InvalidTier();
+        return _tierSnapshotIds[index];
+    }
+
+    function getTierPayoutCount(uint8 tierId) external view returns (uint256) {
+        return tierPayoutCount[tierId];
+    }
+
+    function batchWhitelistMemeTokens(address[] calldata tokens, bool allowed) external onlyOwner {
+        if (tokens.length > MRV_MAX_BURN_BATCH * 2) revert MRV_BatchTooLarge();
+        for (uint256 i = 0; i < tokens.length; i++) {
+            address token = tokens[i];
+            if (token == address(0)) continue;
+            whitelistedMemeTokens[token] = allowed;
+            bool found;
+            for (uint256 j = 0; j < _whitelistedTokenList.length; j++) {
+                if (_whitelistedTokenList[j] == token) { found = true; break; }
+            }
+            if (allowed && !found) _whitelistedTokenList.push(token);
+            emit MemeTokenWhitelisted(token, allowed, block.number);
+        }
+    }
+
+    function infernoVaultBps() external pure returns (uint256) {
+        return MRV_INFERNO_VAULT_BPS;
+    }
+
+    function infernoTreasuryBps() external pure returns (uint256) {
+        return MRV_INFERNO_TREASURY_BPS;
+    }
+
+    function nonceMagic() external pure returns (uint256) {
+        return MRV_NONCE_MAGIC;
+    }
+
