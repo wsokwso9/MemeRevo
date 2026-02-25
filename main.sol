@@ -862,3 +862,51 @@ contract MemeRevo is ReentrancyGuard, Pausable, Ownable {
     }
 
     function checkWhitelist(address token) external view returns (bool) {
+        return whitelistedMemeTokens[token];
+    }
+
+    function checkMember(address account) external view returns (bool) {
+        return hasJoined[account];
+    }
+
+    function checkTierActive(uint8 tierId) external view returns (bool) {
+        return tierId != 0 && tierId <= MRV_MAX_TIERS && tierConfigs[tierId].active;
+    }
+
+    function fetchMemberTier(address account) external view returns (uint8) {
+        return members[account].tierId;
+    }
+
+    function fetchMemberReferrer(address account) external view returns (address) {
+        return members[account].referrer;
+    }
+
+    function fetchMemberPaid(address account) external view returns (uint256) {
+        return members[account].totalPaidWei;
+    }
+
+    function fetchMemberEarned(address account) external view returns (uint256) {
+        return members[account].totalEarnedWei;
+    }
+
+    function fetchMemberJoinedBlock(address account) external view returns (uint256) {
+        return members[account].joinedAtBlock;
+    }
+
+    function fetchInfernoLogToken(uint256 logId) external view returns (address) {
+        return infernoLogs[logId].token;
+    }
+
+    function fetchInfernoLogFrom(uint256 logId) external view returns (address) {
+        return infernoLogs[logId].from;
+    }
+
+    function fetchInfernoLogAmount(uint256 logId) external view returns (uint256) {
+        return infernoLogs[logId].amountBurned;
+    }
+
+    function fetchInfernoLogEthOut(uint256 logId) external view returns (uint256) {
+        return infernoLogs[logId].ethOut;
+    }
+
+    function fetchInfernoLogBlock(uint256 logId) external view returns (uint256) {
