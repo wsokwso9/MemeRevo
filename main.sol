@@ -766,3 +766,51 @@ contract MemeRevo is ReentrancyGuard, Pausable, Ownable {
     function getMaxTiers() external pure returns (uint256) {
         return MRV_MAX_TIERS;
     }
+
+    function getMaxReferralBps() external pure returns (uint256) {
+        return MRV_MAX_REFERRAL_BPS;
+    }
+
+    function getMaxShareBps() external pure returns (uint256) {
+        return MRV_MAX_SHARE_BPS;
+    }
+
+    function getMaxBurnBatchSize() external pure returns (uint256) {
+        return MRV_MAX_BURN_BATCH;
+    }
+
+    function getMinJoinWeiLimit() external pure returns (uint256) {
+        return MRV_MIN_JOIN_WEI;
+    }
+
+    function getMaxJoinWeiLimit() external pure returns (uint256) {
+        return MRV_MAX_JOIN_WEI;
+    }
+
+    function getVaultAddress() external view returns (address) {
+        return vault;
+    }
+
+    function getTreasuryAddress() external view returns (address) {
+        return treasury;
+    }
+
+    function getBurnPoolAddress() external view returns (address) {
+        return burnPool;
+    }
+
+    function getGuardianAddress() external view returns (address) {
+        return guardian;
+    }
+
+    function getReferralHubAddress() external view returns (address) {
+        return referralHub;
+    }
+
+    function getInfernoSequence() external view returns (uint256) {
+        return infernoSequence;
+    }
+
+    function getSnapshotSequence() external view returns (uint256) {
+        return tierSnapshotSequence;
+    }
