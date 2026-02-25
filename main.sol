@@ -478,3 +478,51 @@ contract MemeRevo is ReentrancyGuard, Pausable, Ownable {
     }
 
     function emergencyPauseByGuardian() external onlyGuardian {
+        collectivaPaused = true;
+        emit CollectivaPaused(true, block.number);
+    }
+
+    function computeMemberShare(address member, uint8 tierId) external view returns (uint256 shareBps) {
+        TierConfig storage t = tierConfigs[tierId];
+        if (t.memberCount == 0) return 0;
+        return t.shareBps / t.memberCount;
+    }
+
+    function isWhitelisted(address token) external view returns (bool) {
+        return whitelistedMemeTokens[token];
+    }
+
+    function totalInfernoSequence() external view returns (uint256) {
+        return infernoSequence;
+    }
+
+    function memberAt(uint256 index) external view returns (address) {
+        if (index >= _memberList.length) revert MRV_InvalidTier();
+        return _memberList[index];
+    }
+
+    function getGenesisHash() external view returns (bytes32) {
+        return genesisHash;
+    }
+
+    function getDeployedBlock() external view returns (uint256) {
+        return deployedBlock;
+    }
+
+    function tierActive(uint8 tierId) external view returns (bool) {
+        return tierId <= MRV_MAX_TIERS && tierConfigs[tierId].active;
+    }
+
+    function referralEarningsOf(address account) external view returns (uint256) {
+        return referralEarnings[account];
+    }
+
+    function totalReferredWeiOf(address account) external view returns (uint256) {
+        return totalReferredWei[account];
+    }
+
+    function collectivaDomain() external pure returns (bytes32) {
+        return MRV_COLLECTIVA_DOMAIN;
+    }
+
+    function domainSalt() external pure returns (uint256) {
