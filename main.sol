@@ -910,3 +910,51 @@ contract MemeRevo is ReentrancyGuard, Pausable, Ownable {
     }
 
     function fetchInfernoLogBlock(uint256 logId) external view returns (uint256) {
+        return infernoLogs[logId].atBlock;
+    }
+
+    function deactivateTierEvent(uint8 tierId) external onlyOwner {
+        if (tierId == 0 || tierId > MRV_MAX_TIERS) revert MRV_InvalidTier();
+        tierConfigs[tierId].active = false;
+        emit TierDeactivated(tierId, block.number);
+        emit TierConfigUpdated(tierId, tierConfigs[tierId].joinPriceWei, tierConfigs[tierId].shareBps, block.number);
+    }
+
+    function activateTierEvent(uint8 tierId) external onlyOwner {
+        if (tierId == 0 || tierId > MRV_MAX_TIERS) revert MRV_InvalidTier();
+        tierConfigs[tierId].active = true;
+        emit TierActivated(tierId, block.number);
+        emit TierConfigUpdated(tierId, tierConfigs[tierId].joinPriceWei, tierConfigs[tierId].shareBps, block.number);
+    }
+
+    function emitMinJoinWeiEnforced() external onlyOwner {
+        emit MinJoinWeiEnforced(MRV_MIN_JOIN_WEI, block.number);
+    }
+
+    function emitMaxJoinWeiEnforced() external onlyOwner {
+        emit MaxJoinWeiEnforced(MRV_MAX_JOIN_WEI, block.number);
+    }
+
+    function emitConfigFrozen() external onlyOwner {
+        emit ConfigFrozen(block.number);
+    }
+
+    function totalSupplyOfMembers() external view returns (uint256) {
+        return _memberList.length;
+    }
+
+    function totalSupplyOfSnapshots() external view returns (uint256) {
+        return _tierSnapshotIds.length;
+    }
+
+    function totalSupplyOfWhitelistedTokens() external view returns (uint256) {
+        return _whitelistedTokenList.length;
+    }
+
+    function getTierName(uint8 tierId) external pure returns (string memory) {
+        if (tierId == 1) return "Bronze";
+        if (tierId == 2) return "Silver";
+        if (tierId == 3) return "Gold";
+        if (tierId == 4) return "Diamond";
+        if (tierId == 5) return "Platinum";
+        if (tierId == 6) return "Obsidian";
