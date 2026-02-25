@@ -1054,3 +1054,51 @@ contract MemeRevo is ReentrancyGuard, Pausable, Ownable {
         return infernoLogs[logId];
     }
 
+    function contractBalance() external view returns (uint256) {
+        return address(this).balance;
+    }
+
+    function vaultBalance() external view returns (uint256) {
+        return vault.balance;
+    }
+
+    function treasuryBalance() external view returns (uint256) {
+        return treasury.balance;
+    }
+
+    function burnPoolBalance() external view returns (uint256) {
+        return burnPool.balance;
+    }
+
+    function currentGuardian() external view returns (address) {
+        return guardian;
+    }
+
+    function isMember(address account) external view returns (bool) {
+        return hasJoined[account];
+    }
+
+    function memberTier(address account) external view returns (uint8) {
+        return members[account].tierId;
+    }
+
+    function memberJoinedAtBlock(address account) external view returns (uint256) {
+        return members[account].joinedAtBlock;
+    }
+
+    function memberTotalPaid(address account) external view returns (uint256) {
+        return members[account].totalPaidWei;
+    }
+
+    function memberTotalEarned(address account) external view returns (uint256) {
+        return members[account].totalEarnedWei;
+    }
+
+    function memberReferrer(address account) external view returns (address) {
+        return members[account].referrer;
+    }
+
+    function tierJoinPrice(uint8 tierId) external view returns (uint256) {
+        return tierConfigs[tierId].joinPriceWei;
+    }
+
