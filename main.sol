@@ -238,3 +238,51 @@ contract MemeRevo is ReentrancyGuard, Pausable, Ownable {
         }
         if (allowed && !found) _whitelistedTokenList.push(token);
         emit MemeTokenWhitelisted(token, allowed, block.number);
+    }
+
+    function rotateGuardian(address newGuardian_) external onlyOwner {
+        if (newGuardian_ == address(0)) revert MRV_ZeroAddress();
+        if (newGuardian_ == guardian) revert MRV_SameAddress();
+        address prev = guardian;
+        guardian = newGuardian_;
+        emit GuardianRotated(prev, newGuardian_, block.number);
+    }
+
+    function infernoBurn(address token, uint256 amount) external nonReentrant whenCollectivaNotPaused returns (uint256 ethOut) {
+        if (!whitelistedMemeTokens[token]) revert MRV_TokenNotWhitelisted();
+        if (amount < minBurnAmountWei) revert MRV_AmountBelowMin();
+        if (amount > maxBurnPerTxWei) revert MRV_AmountAboveMax();
+        IERC20Meme t = IERC20Meme(token);
+        uint256 bal = t.balanceOf(msg.sender);
+        if (bal < amount) revert MRV_InsufficientPayment();
+        uint256 ethBefore = address(this).balance;
+        if (!t.transferFrom(msg.sender, address(this), amount)) revert MRV_TransferFailed();
+        (bool burnOk,) = token.call(abi.encodeWithSelector(0x42966c68, amount));
+        if (!burnOk) {
+            (bool sendOk,) = token.call(abi.encodeWithSelector(0xa9059cbb, burnPool, amount));
+            if (!sendOk) revert MRV_TransferFailed();
+        }
+        ethOut = address(this).balance - ethBefore;
+        infernoSequence++;
+        totalBurnedByUser[msg.sender] += amount;
+        userBurnPerToken[msg.sender][token] += amount;
+        userInfernoCount[msg.sender]++;
+        infernoLogs[infernoSequence] = InfernoLog({ token: token, from: msg.sender, amountBurned: amount, ethOut: ethOut, atBlock: block.number });
+        emit TokenInferno(token, msg.sender, amount, ethOut, block.number);
+        if (ethOut > 0) {
+            uint256 toVault = (ethOut * MRV_INFERNO_VAULT_BPS) / MRV_BPS_BASE;
+            uint256 toTreasury = (ethOut * MRV_INFERNO_TREASURY_BPS) / MRV_BPS_BASE;
+            if (toVault > 0) _safeSend(vault, toVault);
+            if (toTreasury > 0) _safeSend(treasury, toTreasury);
+        }
+        return ethOut;
+    }
+
+    function infernoBurnBatch(address[] calldata tokens, uint256[] calldata amounts) external nonReentrant whenCollectivaNotPaused returns (uint256 totalEthOut) {
+        if (tokens.length != amounts.length) revert MRV_ArrayLengthMismatch();
+        if (tokens.length > MRV_MAX_BURN_BATCH) revert MRV_BatchTooLarge();
+        uint256 totalBurned = 0;
+        uint256 ethBefore = address(this).balance;
+        for (uint256 i = 0; i < tokens.length; i++) {
+            address token = tokens[i];
+            uint256 amount = amounts[i];
