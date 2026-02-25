@@ -1198,3 +1198,45 @@ contract MemeRevo is ReentrancyGuard, Pausable, Ownable {
     function collectivaPausedStatus() external view returns (bool) {
         return collectivaPaused;
     }
+
+    function infernoSequenceCurrent() external view returns (uint256) {
+        return infernoSequence;
+    }
+
+    function tierSnapshotSequenceCurrent() external view returns (uint256) {
+        return tierSnapshotSequence;
+    }
+
+    function hasMemberJoined(address account) external view returns (bool) {
+        return hasJoined[account];
+    }
+
+    function tokenWhitelisted(address token) external view returns (bool) {
+        return whitelistedMemeTokens[token];
+    }
+
+    function referralEarningsFor(address account) external view returns (uint256) {
+        return referralEarnings[account];
+    }
+
+    function totalReferredFor(address account) external view returns (uint256) {
+        return totalReferredWei[account];
+    }
+
+    function immutableVault() external view returns (address) {
+        return vault;
+    }
+
+    function immutableTreasury() external view returns (address) {
+        return treasury;
+    }
+
+    function immutableBurnPool() external view returns (address) {
+        return burnPool;
+    }
+
+    function immutableReferralHub() external view returns (address) {
+        return referralHub;
+    }
+}
+
