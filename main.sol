@@ -526,3 +526,51 @@ contract MemeRevo is ReentrancyGuard, Pausable, Ownable {
     }
 
     function domainSalt() external pure returns (uint256) {
+        return MRV_DOMAIN_SALT;
+    }
+
+    function bpsBase() external pure returns (uint256) {
+        return MRV_BPS_BASE;
+    }
+
+    function maxTiers() external pure returns (uint256) {
+        return MRV_MAX_TIERS;
+    }
+
+    function maxReferralBps() external pure returns (uint256) {
+        return MRV_MAX_REFERRAL_BPS;
+    }
+
+    function maxShareBps() external pure returns (uint256) {
+        return MRV_MAX_SHARE_BPS;
+    }
+
+    function maxBurnBatch() external pure returns (uint256) {
+        return MRV_MAX_BURN_BATCH;
+    }
+
+    function minJoinWei() external pure returns (uint256) {
+        return MRV_MIN_JOIN_WEI;
+    }
+
+    function maxJoinWei() external pure returns (uint256) {
+        return MRV_MAX_JOIN_WEI;
+    }
+
+    function getBurnStats(address account) external view returns (uint256 totalBurnedWei, uint256 burnCount, uint256 totalEthOut) {
+        totalBurnedWei = totalBurnedByUser[account];
+        burnCount = userInfernoCount[account];
+        totalEthOut = 0;
+        return (totalBurnedWei, burnCount, totalEthOut);
+    }
+
+    function getBurnStatsForToken(address account, address token) external view returns (uint256) {
+        return userBurnPerToken[account][token];
+    }
+
+    function getCollectivaConfigStruct() external view returns (CollectivaConfig memory c) {
+        c.minBurnAmountWei = minBurnAmountWei;
+        c.maxBurnPerTxWei = maxBurnPerTxWei;
+        c.referralBps = referralBps;
+        c.activeTierCount = activeTierCount;
+        c.collectivaPaused = collectivaPaused;
