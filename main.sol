@@ -1102,3 +1102,51 @@ contract MemeRevo is ReentrancyGuard, Pausable, Ownable {
         return tierConfigs[tierId].joinPriceWei;
     }
 
+    function tierShareBps(uint8 tierId) external view returns (uint256) {
+        return tierConfigs[tierId].shareBps;
+    }
+
+    function tierMemberCount(uint8 tierId) external view returns (uint256) {
+        return tierConfigs[tierId].memberCount;
+    }
+
+    function tierTotalCollected(uint8 tierId) external view returns (uint256) {
+        return tierConfigs[tierId].totalCollectedWei;
+    }
+
+    function deactivateTier(uint8 tierId) external onlyOwner {
+        if (tierId == 0 || tierId > MRV_MAX_TIERS) revert MRV_InvalidTier();
+        tierConfigs[tierId].active = false;
+        emit TierConfigUpdated(tierId, tierConfigs[tierId].joinPriceWei, tierConfigs[tierId].shareBps, block.number);
+    }
+
+    function activateTier(uint8 tierId) external onlyOwner {
+        if (tierId == 0 || tierId > MRV_MAX_TIERS) revert MRV_InvalidTier();
+        tierConfigs[tierId].active = true;
+        emit TierConfigUpdated(tierId, tierConfigs[tierId].joinPriceWei, tierConfigs[tierId].shareBps, block.number);
+    }
+
+    function totalMembersInTier(uint8 tierId) external view returns (uint256 count) {
+        TierConfig storage t = tierConfigs[tierId];
+        return t.memberCount;
+    }
+
+    function estimateMemberPayout(uint8 tierId, uint256 newJoinWei) external view returns (uint256 payoutPerMember) {
+        TierConfig storage t = tierConfigs[tierId];
+        if (t.memberCount == 0) return 0;
+        uint256 toMembers = (newJoinWei * t.shareBps) / MRV_BPS_BASE;
+        return toMembers / t.memberCount;
+    }
+
+    function estimateReferralReward(uint256 joinWei) external view returns (uint256) {
+        return (joinWei * referralBps) / MRV_BPS_BASE;
+    }
+
+    function estimateVaultShare(uint256 joinWei, uint8 tierId) external view returns (uint256) {
+        TierConfig storage t = tierConfigs[tierId];
+        uint256 refAmount = (joinWei * referralBps) / MRV_BPS_BASE;
+        uint256 toMembers = (joinWei * t.shareBps) / MRV_BPS_BASE;
+        return joinWei - refAmount - toMembers;
+    }
+
+    function canJoinTier(uint8 tierId) external view returns (bool) {
