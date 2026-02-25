@@ -1006,3 +1006,51 @@ contract MemeRevo is ReentrancyGuard, Pausable, Ownable {
     function getInfernoLogBySequence(uint256 seq) external view returns (InfernoLog memory) {
         return infernoLogs[seq];
     }
+
+    function getSnapshotBySequence(uint256 seq) external view returns (TierSnapshot memory) {
+        return tierSnapshots[seq];
+    }
+
+    function getPayoutCountForTier(uint8 tierId) external view returns (uint256) {
+        return tierPayoutCount[tierId];
+    }
+
+    function getBurnedByUserTotal(address account) external view returns (uint256) {
+        return totalBurnedByUser[account];
+    }
+
+    function getBurnedByUserForToken(address account, address token) external view returns (uint256) {
+        return userBurnPerToken[account][token];
+    }
+
+    function getInfernoCountForUser(address account) external view returns (uint256) {
+        return userInfernoCount[account];
+    }
+
+    function getMemberListSlice(uint256 offset, uint256 limit) external view returns (address[] memory out) {
+        uint256 len = _memberList.length;
+        if (offset >= len) return new address[](0);
+        uint256 end = offset + limit;
+        if (end > len) end = len;
+        uint256 n = end - offset;
+        out = new address[](n);
+        for (uint256 i = 0; i < n; i++) out[i] = _memberList[offset + i];
+        return out;
+    }
+
+    function getWhitelistedTokenCount() external view returns (uint256) {
+        return _whitelistedTokenList.length;
+    }
+
+    function getTierConfigStruct(uint8 tierId) external view returns (TierConfig memory) {
+        return tierConfigs[tierId];
+    }
+
+    function getMemberRecordStruct(address account) external view returns (MemberRecord memory) {
+        return members[account];
+    }
+
+    function getInfernoLogStruct(uint256 logId) external view returns (InfernoLog memory) {
+        return infernoLogs[logId];
+    }
+
