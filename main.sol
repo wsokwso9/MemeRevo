@@ -622,3 +622,51 @@ contract MemeRevo is ReentrancyGuard, Pausable, Ownable {
         return MRV_NONCE_MAGIC;
     }
 
+    function usedNonce(bytes32 nonce) external view returns (bool) {
+        return _usedNonces[nonce];
+    }
+
+    function markNonceUsed(bytes32 nonce) external onlyGuardian {
+        if (_usedNonces[nonce]) revert MRV_InvalidAmount();
+        _usedNonces[nonce] = true;
+        emit NonceMarkedUsed(nonce, msg.sender, block.number);
+    }
+
+    function _tryBurnToken(address token, uint256 amount) internal returns (bool) {
+        (bool burnOk,) = token.call(abi.encodeWithSelector(0x42966c68, amount));
+        return burnOk;
+    }
+
+    function _trySendTokenToBurnPool(address token, uint256 amount) internal returns (bool) {
+        (bool sendOk,) = token.call(abi.encodeWithSelector(0xa9059cbb, burnPool, amount));
+        return sendOk;
+    }
+
+    function _computeVaultShare(uint256 ethAmount) internal pure returns (uint256) {
+        return (ethAmount * MRV_INFERNO_VAULT_BPS) / MRV_BPS_BASE;
+    }
+
+    function _computeTreasuryShare(uint256 ethAmount) internal pure returns (uint256) {
+        return (ethAmount * MRV_INFERNO_TREASURY_BPS) / MRV_BPS_BASE;
+    }
+
+    function _validateTierId(uint8 tierId) internal view returns (bool) {
+        return tierId != 0 && tierId <= activeTierCount && tierConfigs[tierId].active;
+    }
+
+    function _validateBurnAmount(uint256 amount) internal view returns (bool) {
+        return amount >= minBurnAmountWei && amount <= maxBurnPerTxWei;
+    }
+
+    function _recordBurnStats(address user, address token, uint256 amount) internal {
+        totalBurnedByUser[user] += amount;
+        userBurnPerToken[user][token] += amount;
+        userInfernoCount[user]++;
+        emit BurnStatsUpdated(user, token, amount, block.number);
+    }
+
+    function _recordTierSnapshot(uint8 tierId) internal {
+        tierSnapshotSequence++;
+        tierSnapshots[tierSnapshotSequence] = TierSnapshot({
+            tierId: tierId,
+            memberCount: tierConfigs[tierId].memberCount,
