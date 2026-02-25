@@ -430,3 +430,51 @@ contract MemeRevo is ReentrancyGuard, Pausable, Ownable {
     function getInfernoLog(uint256 logId) external view returns (address token, address from, uint256 amountBurned, uint256 ethOut, uint256 atBlock) {
         InfernoLog storage l = infernoLogs[logId];
         return (l.token, l.from, l.amountBurned, l.ethOut, l.atBlock);
+    }
+
+    receive() external payable {}
+
+    function withdrawStuckToken(address token, uint256 amount) external onlyOwner nonReentrant {
+        if (token == address(0)) revert MRV_ZeroAddress();
+        if (amount == 0) revert MRV_ZeroAmount();
+        IERC20Meme t = IERC20Meme(token);
+        uint256 bal = t.balanceOf(address(this));
+        if (bal < amount) revert MRV_InsufficientPayment();
+        (bool ok,) = token.call(abi.encodeWithSelector(0xa9059cbb, treasury, amount));
+        if (!ok) revert MRV_TransferFailed();
+    }
+
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    function unpause() external onlyOwner {
+        _unpause();
+    }
+
+    function getConfig() external view returns (
+        uint256 minBurn_,
+        uint256 maxBurn_,
+        uint256 referralBps_,
+        uint8 activeTierCount_,
+        bool paused_
+    ) {
+        return (minBurnAmountWei, maxBurnPerTxWei, referralBps, activeTierCount, collectivaPaused);
+    }
+
+    function getImmutableAddresses() external view returns (
+        address vault_,
+        address treasury_,
+        address burnPool_,
+        address guardian_,
+        address referralHub_
+    ) {
+        return (vault, treasury, burnPool, guardian, referralHub);
+    }
+
+    function setActiveTierCount(uint8 count) external onlyOwner {
+        if (count == 0 || count > MRV_MAX_TIERS) revert MRV_InvalidTier();
+        activeTierCount = count;
+    }
+
+    function emergencyPauseByGuardian() external onlyGuardian {
