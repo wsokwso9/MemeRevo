@@ -814,3 +814,51 @@ contract MemeRevo is ReentrancyGuard, Pausable, Ownable {
     function getSnapshotSequence() external view returns (uint256) {
         return tierSnapshotSequence;
     }
+
+    function getCollectivaPaused() external view returns (bool) {
+        return collectivaPaused;
+    }
+
+    function getMinBurnAmount() external view returns (uint256) {
+        return minBurnAmountWei;
+    }
+
+    function getMaxBurnPerTx() external view returns (uint256) {
+        return maxBurnPerTxWei;
+    }
+
+    function getReferralBps() external view returns (uint256) {
+        return referralBps;
+    }
+
+    function getActiveTierCount() external view returns (uint8) {
+        return activeTierCount;
+    }
+
+    function membersLength() external view returns (uint256) {
+        return _memberList.length;
+    }
+
+    function snapshotIdsLength() external view returns (uint256) {
+        return _tierSnapshotIds.length;
+    }
+
+    function computeJoinCost(uint8 tierId) external view returns (uint256) {
+        return tierConfigs[tierId].joinPriceWei;
+    }
+
+    function computeReferralCut(uint256 weiAmount) external view returns (uint256) {
+        return (weiAmount * referralBps) / MRV_BPS_BASE;
+    }
+
+    function computeMemberCut(uint256 weiAmount, uint8 tierId) external view returns (uint256) {
+        return (weiAmount * tierConfigs[tierId].shareBps) / MRV_BPS_BASE;
+    }
+
+    function computeVaultCut(uint256 weiAmount, uint8 tierId, bool hasReferrer) external view returns (uint256) {
+        uint256 ref = hasReferrer ? (weiAmount * referralBps) / MRV_BPS_BASE : 0;
+        uint256 toMembers = (weiAmount * tierConfigs[tierId].shareBps) / MRV_BPS_BASE;
+        return weiAmount - ref - toMembers;
+    }
+
+    function checkWhitelist(address token) external view returns (bool) {
