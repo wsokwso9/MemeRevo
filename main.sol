@@ -334,3 +334,51 @@ contract MemeRevo is ReentrancyGuard, Pausable, Ownable {
         _memberList.push(msg.sender);
         uint256 refBps = (referrer != address(0) && referrer != msg.sender) ? referralBps : 0;
         uint256 refAmount = (msg.value * refBps) / MRV_BPS_BASE;
+        uint256 toMembers = (msg.value * t.shareBps) / MRV_BPS_BASE;
+        uint256 toVault = msg.value - refAmount - toMembers;
+        if (refAmount > 0 && referrer != address(0)) {
+            referralEarnings[referrer] += refAmount;
+            totalReferredWei[referrer] += msg.value;
+            _safeSend(referrer, refAmount);
+            emit ReferralCredited(referrer, msg.sender, refAmount, block.number);
+        }
+        if (toMembers > 0) _distributeToTier(tierId, toMembers);
+        if (toVault > 0) _safeSend(vault, toVault);
+        tierSnapshotSequence++;
+        tierSnapshots[tierSnapshotSequence] = TierSnapshot({
+            tierId: tierId,
+            memberCount: tierConfigs[tierId].memberCount,
+            totalCollectedWei: tierConfigs[tierId].totalCollectedWei,
+            atBlock: block.number,
+            snapshotId: tierSnapshotSequence
+        });
+        _tierSnapshotIds.push(tierSnapshotSequence);
+        emit MemberJoined(msg.sender, tierId, referrer, block.number);
+        emit TierAscended(msg.sender, tierId, msg.value, block.number);
+    }
+
+    function _distributeToTier(uint8 tierId, uint256 amountWei) internal {
+        TierConfig storage t = tierConfigs[tierId];
+        if (t.memberCount == 0) return;
+        uint256 perMember = amountWei / t.memberCount;
+        if (perMember == 0) return;
+        uint256 distributed = 0;
+        for (uint256 i = 0; i < _memberList.length && distributed < amountWei; i++) {
+            address m = _memberList[i];
+            if (members[m].tierId == tierId) {
+                uint256 pay = perMember;
+                if (distributed + pay > amountWei) pay = amountWei - distributed;
+                members[m].totalEarnedWei += pay;
+                _safeSend(m, pay);
+                distributed += pay;
+                tierPayoutCount[tierId]++;
+                emit PayoutDistributed(m, tierId, pay, block.number);
+            }
+        }
+    }
+
+    function harvestVault(uint256 amountWei) external onlyGuardian nonReentrant {
+        if (amountWei == 0) revert MRV_ZeroAmount();
+        if (address(this).balance < amountWei) revert MRV_NoBalance();
+        _safeSend(vault, amountWei);
+        emit VaultHarvest(vault, amountWei, block.number);
