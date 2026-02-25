@@ -958,3 +958,51 @@ contract MemeRevo is ReentrancyGuard, Pausable, Ownable {
         if (tierId == 4) return "Diamond";
         if (tierId == 5) return "Platinum";
         if (tierId == 6) return "Obsidian";
+        if (tierId == 7) return "Void";
+        if (tierId == 8) return "Apex";
+        return "Unknown";
+    }
+
+    function getTierJoinPriceWei(uint8 tierId) external view returns (uint256) {
+        return tierConfigs[tierId].joinPriceWei;
+    }
+
+    function getTierShareBpsWei(uint8 tierId) external view returns (uint256) {
+        return tierConfigs[tierId].shareBps;
+    }
+
+    function getTierActiveFlag(uint8 tierId) external view returns (bool) {
+        return tierConfigs[tierId].active;
+    }
+
+    function getTierMemberCountWei(uint8 tierId) external view returns (uint256) {
+        return tierConfigs[tierId].memberCount;
+    }
+
+    function getTierTotalCollectedWei(uint8 tierId) external view returns (uint256) {
+        return tierConfigs[tierId].totalCollectedWei;
+    }
+
+    function getMemberTierId(address account) external view returns (uint8) {
+        return members[account].tierId;
+    }
+
+    function getMemberJoinedBlock(address account) external view returns (uint256) {
+        return members[account].joinedAtBlock;
+    }
+
+    function getMemberTotalPaidWei(address account) external view returns (uint256) {
+        return members[account].totalPaidWei;
+    }
+
+    function getMemberTotalEarnedWei(address account) external view returns (uint256) {
+        return members[account].totalEarnedWei;
+    }
+
+    function getMemberReferrerAddress(address account) external view returns (address) {
+        return members[account].referrer;
+    }
+
+    function getInfernoLogBySequence(uint256 seq) external view returns (InfernoLog memory) {
+        return infernoLogs[seq];
+    }
