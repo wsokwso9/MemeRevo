@@ -1150,3 +1150,51 @@ contract MemeRevo is ReentrancyGuard, Pausable, Ownable {
     }
 
     function canJoinTier(uint8 tierId) external view returns (bool) {
+        if (tierId == 0 || tierId > activeTierCount) return false;
+        return tierConfigs[tierId].active && !hasJoined[msg.sender];
+    }
+
+    function minBurnForInferno() external view returns (uint256) {
+        return minBurnAmountWei;
+    }
+
+    function maxBurnForInferno() external view returns (uint256) {
+        return maxBurnPerTxWei;
+    }
+
+    function whitelistLength() external view returns (uint256) {
+        return _whitelistedTokenList.length;
+    }
+
+    function tokenAtWhitelistIndex(uint256 index) external view returns (address) {
+        if (index >= _whitelistedTokenList.length) revert MRV_InvalidTier();
+        return _whitelistedTokenList[index];
+    }
+
+    function platformVersion() external pure returns (uint8 major, uint8 minor) {
+        return (1, 0);
+    }
+
+    function chainIdAtDeploy() external view returns (uint256) {
+        return block.chainid;
+    }
+
+    function blockNumberAtDeploy() external view returns (uint256) {
+        return deployedBlock;
+    }
+
+    function hashGenesis() external view returns (bytes32) {
+        return genesisHash;
+    }
+
+    function vaultBpsForInferno() external pure returns (uint256) {
+        return MRV_INFERNO_VAULT_BPS;
+    }
+
+    function treasuryBpsForInferno() external pure returns (uint256) {
+        return MRV_INFERNO_TREASURY_BPS;
+    }
+
+    function collectivaPausedStatus() external view returns (bool) {
+        return collectivaPaused;
+    }
