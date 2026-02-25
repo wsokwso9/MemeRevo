@@ -382,3 +382,51 @@ contract MemeRevo is ReentrancyGuard, Pausable, Ownable {
         if (address(this).balance < amountWei) revert MRV_NoBalance();
         _safeSend(vault, amountWei);
         emit VaultHarvest(vault, amountWei, block.number);
+    }
+
+    function harvestTreasury(uint256 amountWei) external onlyOwner nonReentrant {
+        if (amountWei == 0) revert MRV_ZeroAmount();
+        if (address(this).balance < amountWei) revert MRV_NoBalance();
+        _safeSend(treasury, amountWei);
+        emit TreasuryHarvest(treasury, amountWei, block.number);
+    }
+
+    function _safeSend(address to, uint256 amount) internal {
+        if (to == address(0) || amount == 0) return;
+        (bool ok,) = to.call{ value: amount }("");
+        if (!ok) revert MRV_TransferFailed();
+    }
+
+    function getMemberInfo(address account) external view returns (
+        uint8 tierId,
+        uint256 joinedAtBlock,
+        uint256 totalPaidWei,
+        uint256 totalEarnedWei,
+        address referrer
+    ) {
+        MemberRecord storage m = members[account];
+        return (m.tierId, m.joinedAtBlock, m.totalPaidWei, m.totalEarnedWei, m.referrer);
+    }
+
+    function getTierInfo(uint8 tierId) external view returns (
+        uint256 joinPriceWei,
+        uint256 shareBps,
+        bool active,
+        uint256 memberCount,
+        uint256 totalCollectedWei
+    ) {
+        TierConfig storage t = tierConfigs[tierId];
+        return (t.joinPriceWei, t.shareBps, t.active, t.memberCount, t.totalCollectedWei);
+    }
+
+    function getWhitelistedTokens() external view returns (address[] memory) {
+        return _whitelistedTokenList;
+    }
+
+    function getMemberCount() external view returns (uint256) {
+        return _memberList.length;
+    }
+
+    function getInfernoLog(uint256 logId) external view returns (address token, address from, uint256 amountBurned, uint256 ethOut, uint256 atBlock) {
+        InfernoLog storage l = infernoLogs[logId];
+        return (l.token, l.from, l.amountBurned, l.ethOut, l.atBlock);
